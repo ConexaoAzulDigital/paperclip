@@ -1,0 +1,61 @@
+name: Deploy to dev1
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "companies/**"
+
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Motivo do deploy manual"
+        required: false
+        default: "deploy manual"
+
+concurrency:
+  group: deploy-dev1
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Paperclip → dev1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV1_HOST }}
+          username: ${{ secrets.DEV1_USER }}
+          key: ${{ secrets.DEV1_SSH_KEY }}
+          script: |
+            set -e
+            echo "=== Pulling latest from fork ==="
+            cd /docker/paperclip
+            git pull origin main
+
+            echo "=== Rebuild and restart ==="
+            docker compose up -d --build
+
+            echo "=== Health check ==="
+            sleep 20
+            curl -sf http://localhost:3100/api/health && echo "Paperclip OK" || echo "Health check falhou"
+
+            echo "=== Disk ==="
+            df -h / | tail -1
+
+      - name: Notify Discord
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: "Paperclip Deploy dev1"
+          description: "${{ job.status == 'success' && '✅ Deploy concluído' || '❌ Deploy falhou' }}"
+          color: ${{ job.status == 'success' && '0x00ff00' || '0xff0000' }}

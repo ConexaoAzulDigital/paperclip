@@ -1,0 +1,66 @@
+services:
+  paperclip-db:
+    image: postgres:17-alpine
+    container_name: paperclip-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: paperclip
+      POSTGRES_PASSWORD: ${PAPERCLIP_DB_PASSWORD:-paperclip_dev_change_me}
+      POSTGRES_DB: paperclip
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperclip -d paperclip"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - paperclip-pgdata:/var/lib/postgresql/data
+    networks:
+      - paperclip-internal
+
+  paperclip:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: paperclip
+    restart: unless-stopped
+    ports:
+      - "3110:3100"
+    environment:
+      DATABASE_URL: postgres://paperclip:${PAPERCLIP_DB_PASSWORD:-paperclip_dev_change_me}@paperclip-db:5432/paperclip
+      PORT: "3100"
+      HOST: "0.0.0.0"
+      SERVE_UI: "true"
+      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private"
+      PAPERCLIP_PUBLIC_URL: ${PAPERCLIP_PUBLIC_URL:-http://localhost:3100}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set}
+      NODE_ENV: production
+      TZ: America/Sao_Paulo
+    volumes:
+      - paperclip-data:/paperclip
+    depends_on:
+      paperclip-db:
+        condition: service_healthy
+    networks:
+      - paperclip-internal
+      - web_swarm
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3100/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  paperclip-pgdata:
+    name: paperclip-pgdata
+  paperclip-data:
+    name: paperclip-data
+
+networks:
+  paperclip-internal:
+    name: paperclip-internal
+    driver: bridge
+  web_swarm:
+    external: true
+    name: web_swarm
