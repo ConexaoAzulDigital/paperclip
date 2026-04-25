@@ -3,7 +3,7 @@ name: Deploy to dev1
 on:
   push:
     branches:
-      - main
+      - master
     paths-ignore:
       - "docs/**"
       - "*.md"
@@ -39,7 +39,7 @@ jobs:
             set -e
             echo "=== Pulling latest from fork ==="
             cd /docker/paperclip
-            git pull origin main
+            git pull origin master
 
             echo "=== Rebuild and restart ==="
             docker compose up -d --build
