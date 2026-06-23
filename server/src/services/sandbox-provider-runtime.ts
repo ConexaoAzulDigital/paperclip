@@ -18,6 +18,8 @@ export interface AcquireSandboxLeaseInput {
   environmentId: string;
   heartbeatRunId: string;
   issueId: string | null;
+  agentId?: string | null;
+  executionWorkspaceId?: string | null;
 }
 
 export interface ResumeSandboxLeaseInput {
@@ -76,6 +78,7 @@ export interface SandboxExecuteResult {
 
 export interface SandboxProvider {
   readonly provider: SandboxEnvironmentProvider;
+  readonly supportsReusableLeases?: boolean;
   validateConfig(config: SandboxEnvironmentConfig): Promise<SandboxProviderValidationResult>;
   probe(config: SandboxEnvironmentConfig): Promise<EnvironmentProbeResult>;
   acquireLease(input: AcquireSandboxLeaseInput): Promise<SandboxLeaseHandle>;
@@ -115,6 +118,7 @@ function buildFakeSandboxProbe(config: FakeSandboxEnvironmentConfig): Environmen
 
 class FakeSandboxProvider implements SandboxProvider {
   readonly provider = "fake" as const;
+  readonly supportsReusableLeases = false;
 
   async validateConfig(config: SandboxEnvironmentConfig): Promise<SandboxProviderValidationResult> {
     assertProviderConfig<FakeSandboxEnvironmentConfig>(this.provider, config);
@@ -136,8 +140,8 @@ class FakeSandboxProvider implements SandboxProvider {
 
   async acquireLease(input: AcquireSandboxLeaseInput): Promise<SandboxLeaseHandle> {
     assertProviderConfig<FakeSandboxEnvironmentConfig>(this.provider, input.config);
-    const providerLeaseId = input.config.reuseLease
-      ? `sandbox://fake/${input.environmentId}`
+    const providerLeaseId = input.config.reuseLease && this.supportsReusableLeases
+      ? `sandbox://fake/${input.environmentId}/${input.executionWorkspaceId ?? "workspace"}/${input.agentId ?? "agent"}`
       : `sandbox://fake/${input.heartbeatRunId}/${randomUUID()}`;
 
     return {
@@ -282,15 +286,13 @@ export function findReusableSandboxProviderLeaseId(input: {
 }): string | null {
   const provider = getSandboxProvider(input.config.provider);
   if (!provider) {
-    // For plugin-backed providers, reuse matching is handled by the plugin
-    // environment driver. Fall back to metadata-based matching.
     for (const lease of input.leases) {
       const metadata = lease.metadata ?? {};
       if (
         typeof lease.providerLeaseId === "string" &&
         lease.providerLeaseId.length > 0 &&
         metadata.provider === input.config.provider &&
-        metadata.reuseLease === true
+        metadataMatchesPluginSandboxConfig(input.config, metadata)
       ) {
         return lease.providerLeaseId;
       }
@@ -305,6 +307,21 @@ export function findReusableSandboxProviderLeaseId(input: {
   return null;
 }
 
+function metadataMatchesPluginSandboxConfig(
+  config: SandboxEnvironmentConfig,
+  metadata: Record<string, unknown>,
+): boolean {
+  if (metadata.reuseLease !== true) return false;
+  for (const [key, value] of Object.entries(config)) {
+    if (key === "provider" || key === "reuseLease") continue;
+    if (value === undefined) continue;
+    if (JSON.stringify(metadata[key]) !== JSON.stringify(value)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export async function probeSandboxProvider(
   config: SandboxEnvironmentConfig,
 ): Promise<EnvironmentProbeResult> {
@@ -316,10 +333,12 @@ export async function acquireSandboxProviderLease(input: {
   environmentId: string;
   heartbeatRunId: string;
   issueId: string | null;
+  agentId?: string | null;
+  executionWorkspaceId?: string | null;
   reusableProviderLeaseId?: string | null;
 }): Promise<SandboxLeaseHandle> {
   const provider = requireSandboxProvider(input.config.provider);
-  if (input.config.reuseLease && input.reusableProviderLeaseId) {
+  if (provider.supportsReusableLeases && input.config.reuseLease && input.reusableProviderLeaseId) {
     const resumedLease = await provider.resumeLease({
       config: input.config,
       providerLeaseId: input.reusableProviderLeaseId,
@@ -334,6 +353,8 @@ export async function acquireSandboxProviderLease(input: {
     environmentId: input.environmentId,
     heartbeatRunId: input.heartbeatRunId,
     issueId: input.issueId,
+    agentId: input.agentId,
+    executionWorkspaceId: input.executionWorkspaceId,
   });
 }
 

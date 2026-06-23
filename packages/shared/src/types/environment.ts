@@ -5,7 +5,7 @@ import type {
   EnvironmentLeaseStatus,
   EnvironmentStatus,
 } from "../constants.js";
-import type { EnvSecretRefBinding } from "./secrets.js";
+import type { AgentEnvConfig, EnvSecretRefBinding } from "./secrets.js";
 
 export interface LocalEnvironmentConfig {
   [key: string]: unknown;
@@ -22,16 +22,6 @@ export interface SshEnvironmentConfig {
   strictHostKeyChecking: boolean;
 }
 
-/**
- * Known sandbox environment provider keys.
- *
- * `"fake"` is a built-in test-only provider.
- *
- * Additional providers can be added by installing sandbox provider plugins
- * that declare matching `environmentDrivers` in their manifest. The type
- * includes `string` to allow plugin-backed providers without requiring
- * shared type changes.
- */
 export type SandboxEnvironmentProvider = "fake" | (string & {});
 
 export interface FakeSandboxEnvironmentConfig {
@@ -66,12 +56,12 @@ export interface EnvironmentProbeResult {
 
 export interface Environment {
   id: string;
-  companyId: string;
   name: string;
   description: string | null;
   driver: EnvironmentDriver;
   status: EnvironmentStatus;
   config: Record<string, unknown>;
+  envVars: AgentEnvConfig;
   metadata: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;

@@ -19,6 +19,8 @@ export interface ActiveRunForIssue {
   status: string;
   invocationSource: string;
   triggerDetail: string | null;
+  contextCommentId?: string | null;
+  contextWakeCommentId?: string | null;
   startedAt: string | Date | null;
   finishedAt: string | Date | null;
   createdAt: string | Date;
@@ -41,6 +43,8 @@ export interface LiveRunForIssue {
   status: string;
   invocationSource: string;
   triggerDetail: string | null;
+  contextCommentId?: string | null;
+  contextWakeCommentId?: string | null;
   startedAt: string | null;
   finishedAt: string | null;
   createdAt: string;
@@ -66,11 +70,16 @@ export interface WatchdogDecisionInput {
   snoozedUntil?: string | null;
 }
 
+export interface HeartbeatRunListOptions {
+  summary?: boolean;
+}
+
 export const heartbeatsApi = {
-  list: (companyId: string, agentId?: string, limit?: number) => {
+  list: (companyId: string, agentId?: string, limit?: number, options: HeartbeatRunListOptions = {}) => {
     const searchParams = new URLSearchParams();
     if (agentId) searchParams.set("agentId", agentId);
     if (limit) searchParams.set("limit", String(limit));
+    if (options.summary) searchParams.set("summary", "true");
     const qs = searchParams.toString();
     return api.get<HeartbeatRun[]>(`/companies/${companyId}/heartbeat-runs${qs ? `?${qs}` : ""}`);
   },
