@@ -3184,7 +3184,7 @@ export function recoveryService(db: Db, deps: { enqueueWakeup: RecoveryWakeup })
             .where(
               and(
                 inArray(issueRecoveryActions.status, ["active", "escalated"]),
-                inArray(issueRecoveryActions.sourceIssueId, issueIdsUnderAnalysis),
+                sql`${issueRecoveryActions.sourceIssueId} IN (SELECT ${issues.id} FROM ${issues} WHERE ${issues.hiddenAt} IS NULL AND ${issues.originKind} <> ${RECOVERY_ORIGIN_KINDS.issueGraphLivenessEscalation})`,
               ),
             );
       }),
