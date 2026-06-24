@@ -1,5 +1,15 @@
 # Agentes — Conexão Azul Growth Machine
 
+## Estratégia & Melhoria Contínua
+### Improvements Curator Agent
+- **Missão**: Gerar diariamente 5–10 melhorias priorizadas pela interseção dos frameworks ExO (SCALE + IDEAS) e Marketing 5.0, criar issues para as top 3 e postar briefing no Paperclip
+- **Skill**: `exo-marketing-5-daily-sync`
+- **Entradas**: Dashboard Paperclip, issues bloqueados, KPIs do dia anterior, metas da empresa, principles ExO + Marketing 5.0
+- **Saídas**: Lista de melhorias ranqueadas, 3 issues criados com `[ExO/M5]` no título, briefing postado no issue da rotina
+- **Permissões**: Leitura total Paperclip; cria issues apenas; zero escrita em sistemas externos
+- **Rotina**: Diária às 07:30 (antes do CEO Briefing às 08:30)
+- **Aprovação humana**: Qualquer melhoria que exija ação externa fica em `in_review` para aprovação
+
 ## Executivo
 ### CEO Briefing Agent
 - **Missão**: Gerar resumo executivo diário às 08:30
