@@ -2,6 +2,20 @@
 
 ## Diário
 
+### 07:30 — Sync de Melhorias ExO + Marketing 5.0
+**Responsável:** Improvements Curator Agent → issues criados no Paperclip
+**Skill:** `exo-marketing-5-daily-sync`
+**Saída:**
+- Lista de 5–10 melhorias ranqueadas por impacto
+- 3 issues `[ExO/M5]` criados para as top 3 melhorias
+- Diagnóstico: gap ExO principal do dia + oportunidade Marketing 5.0
+- Ação de maior impacto imediato
+
+**Dimensões analisadas:**
+- ExO/SCALE: Staff on Demand, Community, Algorithms, Leveraged Assets, Engagement
+- ExO/IDEAS: Interfaces, Dashboards, Experimentation, Autonomy, Social Tech
+- Marketing 5.0: Next Tech, Data-Driven, Predictive, Contextual, Augmented, Agile
+
 ### 08:30 — CEO Briefing
 **Responsável:** CEO Briefing Agent → revisão humana
 **Saída:**
