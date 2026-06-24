@@ -197,3 +197,19 @@ O agente não busca na internet. As fontes de insight são:
 
 A profundidade do diagnóstico vem da leitura cuidadosa do estado interno,
 não de buscas externas.
+
+---
+
+## Cadência de output esperada por semana
+
+| Dimensão | Meta semanal de issues criados |
+|----------|-------------------------------|
+| ExO/SCALE — Algorithms | 1–2 (automação de decisão) |
+| ExO/IDEAS — Experimentation | 1–2 (A/B testes ativos) |
+| Marketing 5.0 — Predictive | 1 (modelo de scoring atualizado) |
+| Marketing 5.0 — Contextual | 1–2 (personalização de mensagem) |
+| ExO/SCALE — Community | 0–1 (case, depoimento, rede) |
+
+O agente deve variar as dimensões semana a semana: se na segunda foram criados
+issues de Algorithms, na terça priorize Experimentation ou Contextual para
+evitar viés de repetição.
